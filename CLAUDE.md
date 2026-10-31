@@ -44,4 +44,8 @@ php artisan boost:install
 ```
 
 Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
+
+## Project conventions
+
+Before implementing or reviewing any feature, read `AGENTS.md`. Its project-specific convention section is the source of truth for the existing API architecture, JWT roles, Form Requests, normalization traits, reusable validation rules, Eloquent models, migrations, settings, localization, resources, route grouping, and testing patterns.
 </laravel-boost-guidelines>
