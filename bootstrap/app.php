@@ -4,7 +4,11 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Auth\AuthenticationException;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenExpiredException;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
+use App\Exceptions\BusinessException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,23 +26,54 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetAppLocale::class,
         ]); 
     })->withExceptions(function (Exceptions $exceptions): void {
-    $exceptions->shouldRenderJsonWhen(
-        fn (Request $request, Throwable $e) =>
-            $request->is('api/*') || $request->expectsJson()
-    );
-    
-    // Handle JWT-related exceptions centrally.
-    $exceptions->render(function (
-        JWTException $e,
-        Request $request
-    ) {
-        if (!$request->is('api/*')) {
-            return null;
-        }
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request, Throwable $e) =>
+                $request->is('api/*') || $request->expectsJson()
+        );
 
-        return response()->json([
-            'message' => __('auth.unauthenticated'),
-            'errors' => [__('auth.invalid_token')],
-        ], 401);
-    });
+        $exceptions->render(function (BusinessException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'message' => __($e->getMessage()), 
+                    'errors'  => [__($e->getMessage())],
+                ], $e->getStatusCode());
+            }
+        });
+
+        $exceptions->render(function (TokenExpiredException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth.unauthenticated'),
+                    'errors'  => [__('auth.token_expired')],
+                ], 401);
+            }
+        });
+
+        $exceptions->render(function (TokenInvalidException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth.unauthenticated'),
+                    'errors'  => [__('auth.token_invalid')],
+                ], 401);
+            }
+        });
+
+        $exceptions->render(function (JWTException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth.unauthenticated'),
+                    'errors'  => [__('auth.token_error')],
+                ], 401);
+            }
+        });
+
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth.unauthenticated'),
+                    'errors'  => [__('auth.unauthenticated')],
+                ], 401);
+            }
+        });
+
     })->create();

@@ -12,4 +12,7 @@ return [
     'unauthenticated'     => 'غير مسجل الدخول.',
     'unauthorized_access' => 'غير مصرح بالوصول. صلاحيات غير كافية.',
     'successfully_logged_out' => 'تم تسجيل الخروج بنجاح.',
+    'token_expired' => 'انتهت صلاحية رمز الوصول.',
+    'token_invalid' => 'رمز الوصول غير صالح.',
+    'token_error' => 'خطأ في رمز الوصول.',
 ];

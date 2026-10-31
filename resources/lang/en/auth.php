@@ -12,4 +12,7 @@ return [
     'unauthenticated'     => 'Unauthenticated.',
     'unauthorized_access' => 'Unauthorized. Insufficient permissions.',
     'successfully_logged_out' => 'Successfully logged out.',
+    'token_expired' => 'Token has expired.',
+    'token_invalid' => 'Token is invalid.',
+    'token_error' => 'Token error.',
 ];
