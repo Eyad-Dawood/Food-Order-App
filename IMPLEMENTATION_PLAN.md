@@ -10,15 +10,13 @@ The implementation must:
 
 - Follow `AGENTS.md` and the existing repository structure.
 - Preserve the current JWT authentication guard and API response conventions.
-- Add functionality as small, testable vertical slices rather than creating all
+- Add functionality as small, reviewable vertical slices rather than creating all
   database layers first and wiring them together later.
 - Use Laravel 13/PHP 8.3 APIs and the package versions already present in
   `composer.json`.
 - Keep customer, restaurant-manager, and administrator authorization boundaries
   explicit in routes and policies.
 - Keep all user-facing messages localized in English and Arabic.
-- Add focused Pest feature tests for request-facing behavior and unit tests only
-  for framework-independent calculations/state rules.
 - Avoid dependencies, top-level directories, repositories, services, DTOs, or
   actions unless the feature creates a real boundary that justifies them.
 
@@ -36,7 +34,7 @@ The repository currently contains:
   resources, models, migrations, and translations.
 - Spatie settings support for business settings.
 - Scramble API documentation support.
-- Pest and Pint.
+- Pint.
 - SQLite as the local default database.
 
 The following PRD areas are not yet implemented:
@@ -54,7 +52,7 @@ The following PRD areas are not yet implemented:
 - Manager order processing and statistics.
 - Admin restaurant/coupon/order/user management.
 - Restaurant/menu caching and invalidation.
-- Critical-flow seed data and feature coverage.
+- Critical-flow seed data and endpoint verification.
 - Complete OpenAPI examples/export and final README walkthrough.
 
 ## 3. Decisions and PRD compatibility notes
@@ -103,7 +101,7 @@ Start with the existing direct Laravel style:
 - Policies own record-level authorization.
 
 Extract a focused action/service only for logic that is reused or independently
-testable, especially price calculation, coupon validation, state transitions,
+maintainable, especially price calculation, coupon validation, state transitions,
 checkout, and stock handling. Do not create the entire PRD Domain/Application/
 Infrastructure tree speculatively.
 
@@ -119,7 +117,7 @@ already-applied migrations.
 
 The work is organized into vertical modules. Each module is complete only when
 its schema, model relationships, requests, authorization, endpoints, resources,
-translations, tests, and documentation impact are addressed.
+translations, and documentation impact are addressed.
 
 ### Module 0 — Baseline and compatibility hardening
 
@@ -149,11 +147,11 @@ Expected files/areas:
 - `routes/api.php`
 - `bootstrap/app.php` only if shared error behavior requires a targeted change
 - `resources/lang/en/` and `resources/lang/ar/`
-- focused baseline tests under `tests/Feature/`
+- focused baseline endpoint verification
 
 Exit criteria:
 
-- Existing auth, address, and restaurant tests remain green.
+- Existing auth, address, and restaurant behavior remains compatible.
 - All later modules have an agreed role, money, status, and response contract.
 
 ### Module 1 — Restaurant browsing and menu management
@@ -214,14 +212,14 @@ Caching:
   versioned keys or explicit key invalidation.
 - Invalidate public restaurant/menu data after manager/admin writes.
 
-Tests:
+Verification:
 
-- Public filtering, sorting, pagination, open/active visibility, and menu search.
-- Manager ownership isolation for categories/items.
-- Availability and stock update validation.
-- Resource shape and localized error behavior.
-- Cache hit/invalidation behavior only if it can be tested without coupling to
-  a specific production cache backend.
+- Verify public filtering, sorting, pagination, open/active visibility, and menu
+  search through the API.
+- Verify manager ownership isolation for categories/items.
+- Verify availability, stock update validation, resource shape, and localized
+  error behavior.
+- Verify cache invalidation using the configured cache driver.
 
 Exit criteria:
 
@@ -238,8 +236,8 @@ only the missing behavior:
 - Ensure the default-address invariant is transaction-safe.
 - Confirm settings-based address limits and translated business errors.
 - Ensure checkout can request an address ID and obtain a stable snapshot.
-- Add or update tests for ownership, default replacement, limit enforcement, and
-  validation/normalization.
+- Verify ownership, default replacement, limit enforcement, and
+  validation/normalization through the API.
 
 Exit criteria:
 
@@ -286,17 +284,15 @@ Implementation boundary:
 - Extract a focused cart operation/action only if it prevents duplicated rules
   across endpoints.
 - Extract `PriceCalculator` before checkout if it can be made deterministic and
-  unit tested with integer amounts.
+  independently reviewed with integer amounts.
 - Coupon validation must be reusable by cart preview and checkout, but checkout
   remains the final authority.
 
-Tests:
+Verification:
 
-- Single-restaurant rule.
-- Quantity boundaries and unavailable item rejection.
-- Cart ownership isolation.
-- Coupon apply/remove and preview totals.
-- Recalculation after quantity/item changes.
+- Verify the single-restaurant rule, quantity boundaries, unavailable item
+  rejection, ownership isolation, coupon apply/remove, and recalculation after
+  quantity/item changes.
 
 Exit criteria:
 
@@ -326,13 +322,12 @@ Admin API:
 - Validate date ordering, values, caps, usage limits, and code uniqueness.
 - Keep admin authorization separate from customer cart application.
 
-Tests:
+Verification:
 
-- Valid percentage/fixed discounts.
-- Expired, inactive, not-started, minimum-order, global-limit, per-user-limit,
-  and max-cap failures.
-- Admin-only management and customer ownership of usage checks.
-- Concurrency-sensitive usage behavior is verified during checkout.
+- Verify valid percentage/fixed discounts and expired, inactive, not-started,
+  minimum-order, global-limit, per-user-limit, and max-cap failures.
+- Verify admin-only management and customer ownership of usage checks.
+- Verify concurrency-sensitive usage behavior during checkout.
 
 Exit criteria:
 
@@ -385,7 +380,7 @@ Payment:
 - Support cash and simulated card only.
 - Keep payment status explicit even though no real gateway is integrated.
 - Use a small boundary/contract only if the simulated implementation needs to be
-  replaceable or independently faked in tests.
+  replaceable or independently verified.
 
 Customer API:
 
@@ -394,22 +389,17 @@ Customer API:
 - Order details with items and status timeline.
 - Cancel only while pending.
 
-Tests:
+Verification:
 
-- Successful checkout and exact totals.
-- Address snapshot and item name/price snapshots.
-- Unavailable item and insufficient stock failures.
-- Restaurant closed/inactive and minimum-order failures.
-- Coupon usage and invalid coupon failures.
-- Stock decrement and cart clearing.
-- Idempotent repeated checkout returns one order.
-- Customer cannot access another customer's order.
-- Cancellation restores stock only where the business rule permits it.
+- Verify successful checkout and exact totals.
+- Verify address and item snapshots, unavailable/insufficient-stock failures,
+  restaurant state failures, coupon failures, stock decrement, cart clearing,
+  idempotent repeated checkout, customer ownership, and cancellation behavior.
 
 Exit criteria:
 
 - Checkout is transaction-safe, race-aware, idempotent, and independently
-  verifiable through feature tests.
+  verifiable through the API and transaction checks.
 
 ### Module 6 — Order state machine and manager processing
 
@@ -442,13 +432,10 @@ Admin API:
 
 - View all orders with controlled filters and resources.
 
-Tests:
+Verification:
 
-- Every allowed transition.
-- Every invalid transition.
-- Actor authorization for customer, manager, and admin.
-- Required rejection reason.
-- History row creation and stock restoration behavior.
+- Verify every allowed and invalid transition, actor authorization, required
+  rejection reason, history creation, and stock restoration behavior.
 
 Exit criteria:
 
@@ -474,11 +461,10 @@ Hardening:
 - Review sensitive fields in resources/logs/events.
 - Add stable ordering to all paginated queries.
 
-Tests:
+Verification:
 
-- Event dispatch after success and not after rollback.
-- Queued listener dispatch/fake assertions.
-- Rate-limit behavior at the configured thresholds.
+- Verify event dispatch after success and not after rollback.
+- Verify queued listener behavior and rate-limit thresholds.
 
 Exit criteria:
 
@@ -509,12 +495,10 @@ API:
 - Public paginated restaurant reviews.
 - Admin/manager read access follows the existing visibility rules.
 
-Tests:
+Verification:
 
-- Delivered-order success.
-- Pending/non-owned/non-delivered/duplicate rejection.
-- Rating range validation.
-- Aggregate update correctness.
+- Verify delivered-order success, invalid/duplicate rejection, rating range
+  validation, and aggregate update correctness.
 
 Exit criteria:
 
@@ -537,11 +521,10 @@ Admin:
 - Restaurant/user deactivation must preserve referential integrity and produce
   the standard translated response.
 
-Tests:
+Verification:
 
-- Manager cannot view another restaurant's statistics.
-- Statistic values and cache refresh behavior.
-- Admin-only access and status changes.
+- Verify manager statistics isolation, statistic values, cache refresh behavior,
+  admin-only access, and status changes.
 
 Exit criteria:
 
@@ -599,7 +582,6 @@ Expected additions or targeted changes, introduced module-by-module:
 ### Persistence
 
 - One narrowly scoped anonymous migration per schema concern.
-- Factories for new models used in tests.
 - Seeders for demo data and edge-case coupon data.
 - Dedicated migrations for soft deletes or later schema changes.
 
@@ -617,11 +599,11 @@ Expected additions or targeted changes, introduced module-by-module:
   `resources/lang/ar/`.
 - No hard-coded user-facing success or error messages in controllers/actions.
 
-### Tests
+### Verification
 
-- Feature tests for every request-facing behavior and authorization boundary.
-- Unit tests for deterministic price calculation and state-machine rules.
-- Factories/states used for setup instead of repeated raw model construction.
+- Verify request-facing behavior and authorization boundaries through the API.
+- Use representative data and repeatable request payloads for calculations and
+  state-machine behavior.
 
 ## 6. Dependency and sequencing rules
 
@@ -641,8 +623,8 @@ The implementation order is intentionally dependency-driven:
     final contracts.
 
 No module should silently depend on a later module. If a requirement cannot be
-implemented without one, record the dependency in the module's tests and
-acceptance criteria before coding.
+implemented without one, record the dependency in the module's acceptance
+criteria before coding.
 
 ## 7. Validation strategy
 
@@ -650,17 +632,14 @@ For each module:
 
 1. Read the relevant sibling implementation and applicable skill rules.
 2. Generate Laravel files with `php artisan make:* --no-interaction`.
-3. Add schema, model, request, resource, route, translation, and test changes as
+3. Add schema, model, request, resource, route, and translation changes as
    one coherent vertical slice.
-4. Run the narrowest relevant Pest file or filter.
+4. Verify the changed endpoints, persistence behavior, and error responses.
 5. Run `vendor/bin/pint --dirty --format agent` for modified PHP files.
-6. Re-run affected tests after formatting.
-7. Expand to the full suite when shared auth, middleware, models, migrations,
-   routes, or exception behavior changes.
-8. Review the diff against `AGENTS.md`, the applicable best-practice rules, and
+6. Review the diff against `AGENTS.md`, the applicable best-practice rules, and
    this plan before moving to the next module.
 
-Required critical-flow coverage before completion:
+Required critical-flow verification before completion:
 
 - Register/login/protected access.
 - Restaurant/menu browsing and manager ownership.
@@ -686,7 +665,7 @@ Required critical-flow coverage before completion:
 | Overselling stock during concurrent checkout | Lock menu-item rows inside the checkout transaction and revalidate. |
 | Duplicate mobile checkout submissions | Require a customer-scoped idempotency key under a unique constraint. |
 | Invalid status changes scattered across controllers | Centralize transitions in one state machine/service. |
-| Hidden N+1 queries in restaurant/order resources | Eager-load all resource relationships and test representative endpoints. |
+| Hidden N+1 queries in restaurant/order resources | Eager-load all resource relationships and verify representative endpoints. |
 | Soft delete added without schema support | Add dedicated reversible migrations before enabling model traits. |
 | Seven-day scope expands beyond interview value | Implement MVP first; defer favorites, auto-cancel scheduling, reorder, and
   advanced stats until all critical flows are green. |
@@ -701,23 +680,23 @@ The PRD implementation is complete when:
 - All business rules in the PRD have a single authoritative implementation.
 - Checkout is transactional, stock-safe, server-priced, and idempotent.
 - Order lifecycle transitions are validated and audited.
-- Manager/customer/admin ownership boundaries are covered by tests.
+- Manager/customer/admin ownership boundaries are verified.
 - Events/listeners, caching, rate limits, and API resources are operational.
 - English and Arabic translations exist for all new user-facing messages.
 - Seed data supports a complete demo flow and edge cases.
 - Scramble/OpenAPI output reflects the actual endpoints and response contracts.
-- Focused and broad required tests pass, and modified PHP files are Pint-clean.
+- Required endpoint checks pass, and modified PHP files are Pint-clean.
 - README and generated artifacts describe the implemented behavior accurately.
 
 ## 10. First coding session after plan approval
 
 The first implementation session should execute **Module 0** only:
 
-1. Inspect and test the current auth, restaurant, and address flows.
+1. Inspect and verify the current auth, restaurant, and address flows.
 2. Confirm the money-unit decision and shared enum names.
 3. Fix only tightly coupled baseline issues required by the next module.
-4. Add the first menu migration/model/request/resource/test slice only after the
+4. Add the first menu migration/model/request/resource slice only after the
    baseline contract is settled.
 
 No cart, checkout, order, coupon, event, or review code should be started before
-the menu contract and its ownership tests are stable.
+the menu contract and its ownership behavior are stable.
