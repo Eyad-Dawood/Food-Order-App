@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'admin user',
             'email' => 'admin@example.com',
             'password' => 'sa123456',
+            'phone' => '+201098542132',
             'role' => UserRole::ADMIN->value,
         ]);
 
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'customer user',
             'email' => 'customer@example.com',
             'password' => 'sa123456',
+            'phone' => '+201098532632',
             'role' => UserRole::CUSTOMER->value,
         ]);
 
@@ -37,6 +39,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'restaurant manager user',
             'email' => 'restaurant_manager@example.com',
             'password' => 'sa123456',
+            'phone' => '+201012345678',
             'role' => UserRole::Restaurant_Manager->value,
         ]);
     }
