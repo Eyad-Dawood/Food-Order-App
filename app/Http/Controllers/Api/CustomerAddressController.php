@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\CustomerAddress;
 use App\Http\Requests\Customer\Address\StoreCustomerAddressRequest;
 use App\Http\Requests\Customer\Address\UpdateCustomerAddressRequest;
 use Illuminate\Support\Facades\DB;
+use App\Exceptions\BusinessException;
+use App\Settings\BusinessSettings;
 
 class CustomerAddressController extends Controller
 {
@@ -29,12 +30,16 @@ class CustomerAddressController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCustomerAddressRequest $request)
+    public function store(StoreCustomerAddressRequest $request , BusinessSettings $settings)
     {
         $validatedData = $request->validated();
 
         /** @var \App\Models\User $user */
         $user = Auth::guard('api')->user();
+
+        if ($user->addresses()->count() >= $settings->max_addresses_per_user) {
+            throw new BusinessException('customer_address.max_addresses_reached', 400);
+        }
 
         $address = DB::transaction(function () use ($validatedData, $user) {
             
