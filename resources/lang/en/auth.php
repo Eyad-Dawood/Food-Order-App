@@ -11,4 +11,5 @@ return [
     'invalid_token'       => 'Invalid token.',
     'unauthenticated'     => 'Unauthenticated.',
     'unauthorized_access' => 'Unauthorized. Insufficient permissions.',
+    'successfully_logged_out' => 'Successfully logged out.',
 ];

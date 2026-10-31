@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use PHPOpenSourceSaver\JWTAuth\JWTGuard;
 use App\Enums\Auth\UserRole;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Support\Facades\App;
 
 class AuthController extends Controller
 {
@@ -97,8 +95,8 @@ class AuthController extends Controller
         $guard->logout();
 
         return response()->json([
-            'message' => 'Successfully logged out',
-        ]);
+            'message' => __('auth.successfully_logged_out'),
+        ], 200);
     }
 
 

@@ -11,5 +11,5 @@ return [
     'invalid_token'       => 'رمز الوصول غير صحيحة.',
     'unauthenticated'     => 'غير مسجل الدخول.',
     'unauthorized_access' => 'غير مصرح بالوصول. صلاحيات غير كافية.',
-
+    'successfully_logged_out' => 'تم تسجيل الخروج بنجاح.',
 ];
