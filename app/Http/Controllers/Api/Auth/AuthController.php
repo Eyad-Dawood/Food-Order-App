@@ -45,9 +45,9 @@ class AuthController extends Controller
         return $this->register($request,UserRole::ADMIN->value);
     }
 
-    public function registerVendor(RegisterRequest $request)
+    public function registerRestaurant_Manager(RegisterRequest $request)
     {
-        return $this->register($request,UserRole::VENDOR->value);
+        return $this->register($request,UserRole::Restaurant_Manager->value);
     }
 
     public function login(LoginRequest $request)

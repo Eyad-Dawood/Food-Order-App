@@ -32,12 +32,12 @@ class DatabaseSeeder extends Seeder
             'role' => UserRole::CUSTOMER->value,
         ]);
 
-        //vendor user
+        //Restaurant Manager user
         User::factory()->create([
-            'name' => 'vendor user',
-            'email' => 'vendor@example.com',
+            'name' => 'restaurant manager user',
+            'email' => 'restaurant_manager@example.com',
             'password' => 'sa123456',
-            'role' => UserRole::VENDOR->value,
+            'role' => UserRole::Restaurant_Manager->value,
         ]);
     }
 }

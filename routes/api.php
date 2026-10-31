@@ -7,7 +7,7 @@ use App\Enums\Auth\UserRole;
 
 Route::prefix('auth')->group(function () {
     Route::post('register/customer', [AuthController::class, 'registerCustomer']);
-    Route::post('register/vendor', [AuthController::class, 'registerVendor']);
+    Route::post('register/restaurant_manager', [AuthController::class, 'registerRestaurant_Manager']);
     Route::post('login', [AuthController::class, 'login']);
     Route::post('refresh', [AuthController::class, 'refresh']);
     
@@ -22,7 +22,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('register/admin', [AuthController::class, 'registerAdmin']);
     });
     
-    //Vendor only routes
+    //Restaurant Manager only routes
     
 
     //Customer only routes
