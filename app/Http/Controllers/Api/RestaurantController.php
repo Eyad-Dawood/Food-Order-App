@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Exceptions\BusinessException;
 use App\Settings\BusinessSettings;
+use App\Http\Resources\RestaurantResource;
 
 class RestaurantController extends Controller
 {
@@ -17,7 +18,7 @@ class RestaurantController extends Controller
         $restaurants = Restaurant::where('is_active', true)->get();
 
         return response()->json([
-            'data' => $restaurants,
+            'data' => RestaurantResource::collection($restaurants),
         ]);
     }
 
@@ -45,7 +46,7 @@ class RestaurantController extends Controller
 
         return response()->json([
             'message' => __('restaurant.created_successfully'),
-            'data'    => $restaurant,
+            'data'    => new RestaurantResource($restaurant),
         ], 201);
     }
 
@@ -61,7 +62,11 @@ class RestaurantController extends Controller
     public function update(UpdateRestaurantRequest $request, string $id)
     {
         $validatedData = $request->validated();
-        $restaurant = Restaurant::findOrFail($id);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::guard('api')->user();
+
+        $restaurant = $user->restaurants()->findOrFail($id);
 
         if ($request->hasFile('logo')) {
             //delete old logo if exists
@@ -77,13 +82,16 @@ class RestaurantController extends Controller
 
         return response()->json([
             'message' => __('restaurant.updated_successfully'),
-            'data'    => $restaurant,
+            'data'    => new RestaurantResource($restaurant),
         ]);
     }
 
     public function destroy(string $id)
     {
-        $restaurant = Restaurant::findOrFail($id);
+        /** @var \App\Models\User $user */
+        $user = Auth::guard('api')->user();
+
+        $restaurant = $user->restaurants()->findOrFail($id);
         
         //delete the restaurant's logo if it exists
         if ($restaurant->logo_path) {
@@ -106,7 +114,7 @@ class RestaurantController extends Controller
 
         return response()->json([
             'message' => __('restaurant.updated_successfully'),
-            'data'    => $restaurant,
+            'data'    => new RestaurantResource($restaurant),
         ]);
     }
     //admin only
@@ -118,7 +126,19 @@ class RestaurantController extends Controller
 
         return response()->json([
             'message' => __('restaurant.updated_successfully'),
-            'data'    => $restaurant,
+            'data'    => new RestaurantResource($restaurant),
+        ]);
+    }
+
+    public function myRestaurants()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::guard('api')->user();
+
+        $restaurants = $user->restaurants()->get();
+
+        return response()->json([
+            'data' => RestaurantResource::collection($restaurants),
         ]);
     }
 }

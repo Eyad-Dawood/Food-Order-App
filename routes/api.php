@@ -35,9 +35,8 @@ Route::middleware('auth:api')->group(function () {
     // Restaurant Manager only routes
     Route::middleware(['role:'.UserRole::Restaurant_Manager->value])->group(function () {
         Route::prefix('restaurants')->group(function () {
-            Route::get('/', [RestaurantController::class, 'index']);
+            Route::get('/my', [RestaurantController::class, 'myRestaurants']);
             Route::post('/', [RestaurantController::class, 'store']);
-            Route::get('/{id}', [RestaurantController::class, 'show']);
             Route::put('/{id}', [RestaurantController::class, 'update']);
             Route::delete('/{id}', [RestaurantController::class, 'destroy']);
         });
@@ -51,6 +50,16 @@ Route::middleware('auth:api')->group(function () {
             Route::put('/{id}', [CustomerAddressController::class, 'update']);
             Route::delete('/{id}', [CustomerAddressController::class, 'destroy']);
         });
+    });
+
+    // Customer and Restaurant Manager routes
+    Route::middleware(['role:'.UserRole::CUSTOMER->value.'|'.UserRole::Restaurant_Manager->value])->group(function () {
+
+    Route::prefix('restaurants')->group(function () {
+    Route::get('/', [RestaurantController::class, 'index']);
+    Route::get('/{id}', [RestaurantController::class, 'show']);
+    });
+    
     });
 
 });

@@ -3,6 +3,12 @@
 declare(strict_types=1);
 
 return [
+
+    'custom' => [
+        'phone_invalid' => 'تنسيق رقم الهاتف المقدم غير صحيح.',
+    ],
+
+    
     'accepted'               => 'يجب قبول :attribute.',
     'accepted_if'            => 'يجب قبول :attribute في حالة :other يساوي :value.',
     'active_url'             => 'حقل :attribute لا يُمثّل رابطًا صحيحًا.',
